@@ -1,5 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthenticationService {
@@ -7,7 +8,11 @@ export class AuthenticationService {
     @Inject('AUTHENTICATION_SERVICE') private authenticationClient: ClientProxy,
   ) {}
 
-  getHello() {
-    return this.authenticationClient.send('get_hello', {});
+  async register(user: { username: string; password: string }) {
+    try {
+      return await lastValueFrom(this.authenticationClient.send('auth.register', user));
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

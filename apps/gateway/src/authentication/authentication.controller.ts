@@ -1,12 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 
 @Controller('authentication')
 export class AuthenticationController {
   constructor(private authenticationService: AuthenticationService) {}
 
-  @Get()
-  getHello() {
-    return this.authenticationService.getHello();
+  @Post('register')
+  register(@Body() body: {username: string; password: string}) {
+    return this.authenticationService.register(body);
   }
 }
