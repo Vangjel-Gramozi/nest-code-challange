@@ -2,7 +2,7 @@ version: '3.8'
 services:
   mongo:
     image: mongo:latest
-    container_name: mymongo
+    container_name: mongo-db
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
@@ -11,6 +11,39 @@ services:
       - "27018:27017"
     volumes:
       - mongo_data:/data/db
+
+  authentication:
+    build:
+      context: .
+      dockerfile: apps/authentication/Dockerfile
+    container_name: authentication-ms
+    restart: always
+    environment:
+      TCP_HOST: 0.0.0.0
+      TCP_PORT: 4002
+      MONGO_URI: mongodb://admin:password@mongo:27017/users_db?authSource=admin
+      JWT_SECRET: jwt_secret_key
+    depends_on:
+      - mongo
+    ports:
+      - "4002:4002"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: gateway-ms
+    restart: always
+    environment:
+      PORT: 3000
+      TCP_HOST: authentication
+      TCP_PORT: 4002
+      JWT_SECRET: jwt_secret_key
+      MONGO_URI: mongodb://admin:password@mongo:27017/users_db?authSource=admin
+    depends_on:
+      - authentication
+    ports:
+      - "3000:3000"
 
 volumes:
   mongo_data:

@@ -7,7 +7,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: process.env.TCP_HOST || '0.0.0.0',
-      port: process.env.TCP_PORT ? Number(process.env.TCP_PORT) : 4002,
+      port: Number(process.env.TCP_PORT),
     },
   });
 
