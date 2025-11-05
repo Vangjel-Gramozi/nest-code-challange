@@ -25,6 +25,29 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+### Monorepo apps
+
+- `apps/gateway`: Public HTTP API
+- `apps/authentication`: TCP microservice with MongoDB persistence
+
+### Environment
+
+Required env variables (can be in `.env` at repo root):
+
+```
+PORT=3000
+TCP_HOST=localhost
+TCP_PORT=4002
+MONGO_URI=mongodb://admin:password@localhost:27018/users_db?authSource=admin
+JWT_SECRET=jwt_secret_key
+```
+
+Start Mongo:
+
+```
+docker compose up -d
+```
+
 ## Project setup
 
 ```bash
@@ -34,11 +57,11 @@ $ pnpm install
 ## Compile and run the project
 
 ```bash
-# development
-$ pnpm run start
+# development (gateway)
+$ pnpm run start:dev gateway
 
-# watch mode
-$ pnpm run start:dev
+# development (authentication)
+$ pnpm run start:dev authentication
 
 # production mode
 $ pnpm run start:prod

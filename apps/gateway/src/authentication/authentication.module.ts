@@ -1,28 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { AuthenticationController } from './authentication.controller';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthGuard } from './guard/auth-guard.guard';
-import { JwtModule } from '@nestjs/jwt';
+import { NetworkingModule } from '../../../../core/networking/networking.module';
+import { AuthJwtModule } from 'common/auth/jwt.module';
 
 @Module({
-  imports: [
-    ClientsModule.register([
-      {
-        name: 'AUTHENTICATION_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 4002,
-        },
-      },
-    ]),
-    JwtModule.register({
-      global: true,
-      secret: 'jwt_secret_key',
-      signOptions: { expiresIn: '1h' },
-    }),
-  ],
+  imports: [NetworkingModule, AuthJwtModule],
   providers: [AuthenticationService, AuthGuard],
   controllers: [AuthenticationController],
 })

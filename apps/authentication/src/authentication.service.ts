@@ -1,65 +1,36 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from './users/users.service';
-import { RpcException } from '@nestjs/microservices';
+import { Injectable } from '@nestjs/common';
+import { UserService } from './users/users.service';
 import { JwtService } from '@nestjs/jwt';
-
-export type AuthInput = {
-  username: string;
-  password: string;
-};
-
-export type SignInData = {
-  userId: string;
-  username: string;
-};
-
-export type AuthResult = {
-  accessToken: string;
-  userId: string;
-  username: string;
-};
+import * as bcrypt from 'bcryptjs';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
-    private userSerice: UsersService,
-    private jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async authenticate(input: AuthInput): Promise<AuthResult | null> {
-    const user = await this.validateUser(input);
+  async register(username: string, password: string) {
+    const user = await this.userService.create(username, password);
+    return { id: user._id.toString(), username: user.username };
+  }
+
+  async listUsers() {
+    return this.userService.findAll();
+  }
+
+  async login(username: string, password: string) {
+    const user = await this.userService.findOneByUsername(username);
     if (!user) {
-      throw new RpcException({
-        message: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS', 
-      });
+      throw new RpcException({ message: 'Invalid credentials' });
     }
-
-    // return {
-    //   accessToken: 'dummy-token',
-    //   userId: user.userId,
-    //   username: user.username,
-    // };
-
-    return this.signIn(user);
-  }
-
-  async validateUser(input: AuthInput): Promise<SignInData | null> {
-    const user = await this.userSerice.findOne(input.username);
-    if (user && user.password === input.password) {
-      return { userId: user.id, username: user.username };
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      throw new RpcException({ message: 'Invalid credentials' });
     }
-    return null;
-  }
-
-  async signIn(user: SignInData): Promise<AuthResult> {
-    const tokenPayload = { sub: user.userId, username: user.username };
-    const accessToken = this.jwtService.sign(tokenPayload);
-
-    return {
-      accessToken,
-      userId: user.userId,
-      username: user.username,
-    };
+    const payload = { sub: user._id.toString(), username: user.username };
+    const accessToken = this.jwtService.sign(payload);
+    return { accessToken, userId: payload.sub, username: payload.username };
   }
 }
